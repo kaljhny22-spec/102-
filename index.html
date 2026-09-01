@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>بوابة التقارير الأمنية</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1e3a8a; --accent: #3b82f6; --success: #059669;
+  --danger: #dc2626; --warn: #d97706; --border: #dbeafe;
+  --bg: #f0f9ff; --surface: #fff; --text: #1e293b;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; }
+.app { width: 100%; max-width: 600px; background: var(--surface); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #1e3a8a, #172554); color: white; padding: 28px 20px 22px; text-align: center; border-radius: 0 0 28px 28px; }
+.header h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+.header p { font-size: 0.85rem; opacity: 0.8; }
+
+/* Page */
+.page { display: none; padding: 20px; padding-bottom: 100px; flex: 1; }
+.page.active { display: block; }
+
+/* Menu Grid */
+.menu-intro { text-align: center; padding: 20px 0 10px; color: #64748b; font-size: 0.9rem; }
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+.menu-card {
+  background: var(--surface); border: 2px solid var(--border); border-radius: 18px;
+  padding: 22px 14px; text-align: center; cursor: pointer; transition: 0.18s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.menu-card:active { transform: scale(0.96); }
+.menu-card .icon { font-size: 2.2rem; margin-bottom: 8px; }
+.menu-card .label { font-weight: 800; font-size: 0.95rem; color: var(--primary); }
+.menu-card.wide { grid-column: span 2; }
+.menu-card.green { border-color: #bbf7d0; background: #f0fdf4; }
+.menu-card.green .label { color: var(--success); }
+.menu-card.amber { border-color: #fde68a; background: #fffbeb; }
+.menu-card.amber .label { color: var(--warn); }
+
+/* Form elements */
+label { display: block; font-weight: 700; font-size: 0.88rem; color: #374151; margin: 14px 0 5px; }
+input, select, textarea {
+  width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 12px;
+  font-family: inherit; font-size: 0.97rem; background: var(--surface); color: var(--text);
+  transition: border-color 0.18s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; }
+.row { display: flex; gap: 10px; }
+.col { flex: 1; }
+textarea { resize: vertical; }
+
+/* Section divider */
+.divider { border: none; border-top: 2px solid var(--border); margin: 18px 0; }
+
+/* Reason preset */
+.reason-preset { background: #eff6ff; border: 1.5px solid var(--accent); border-radius: 10px; padding: 10px 12px; font-size: 0.88rem; color: var(--primary); margin-bottom: 6px; cursor: pointer; font-weight: 600; transition: 0.15s; }
+.reason-preset:active { background: #dbeafe; }
+.preset-label { font-size: 0.8rem; color: #64748b; font-weight: 700; margin: 10px 0 6px; }
+
+/* Preview */
+.preview-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px; margin-top: 20px; }
+.preview-title { font-size: 0.78rem; color: #166534; font-weight: 800; margin-bottom: 8px; }
+.preview-content { white-space: pre-wrap; font-size: 0.85rem; line-height: 1.75; color: #1f2937; background: white; padding: 12px; border-radius: 8px; border: 1px dashed #d1fae5; }
+
+/* Buttons */
+.btn { width: 100%; padding: 15px; border: none; border-radius: 14px; font-family: inherit; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.18s; margin-top: 12px; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--primary); color: white; }
+.btn-back { background: #e2e8f0; color: #374151; }
+.btn-clear { background: #fef2f2; color: var(--danger); border: 1.5px solid #fecaca; }
+
+/* Top bar in pages */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.page-title { font-size: 1.1rem; font-weight: 800; color: var(--primary); }
+.back-btn { background: #e2e8f0; border: none; padding: 8px 16px; border-radius: 10px; font-family: inherit; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+
+/* Toast */
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #1e293b; color: white; padding: 12px 28px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; opacity: 0; transition: 0.3s; z-index: 9999; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* أرشيف التقارير */
+.stat-card { background:#f8faff; border:1.5px solid var(--border); border-radius:12px; padding:12px 8px; text-align:center; }
+.stat-num { font-size:1.6rem; font-weight:800; color:var(--primary); }
+.stat-lbl { font-size:0.72rem; color:#64748b; margin-top:2px; }
+.arc-item { background:white; border:1.5px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; }
+.arc-item-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+.arc-type { font-weight:800; font-size:0.95rem; }
+.arc-date { font-size:0.75rem; color:#64748b; text-align:left; }
+.arc-detail { font-size:0.82rem; color:#374151; line-height:1.5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.arc-meta { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.arc-tag { background:#eff6ff; color:#1e3a8a; border-radius:6px; padding:3px 8px; font-size:0.75rem; font-weight:700; }
+.arc-actions { display:flex; gap:6px; margin-top:10px; }
+.arc-btn { flex:1; padding:8px; border:none; border-radius:8px; font-family:inherit; font-weight:700; font-size:0.8rem; cursor:pointer; }
+.arc-empty { text-align:center; padding:50px 20px; color:#94a3b8; }
+.arc-empty-icon { font-size:3rem; margin-bottom:10px; }
+/* Lighting cards */
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🏬 بوابة التقارير الأمنية</h1>
+  </div>
+
+  <!-- ======= القائمة الرئيسية ======= -->
+  <div id="menu" class="page active">
+    <p class="menu-intro">اختر نوع التقرير</p>
+    <div class="menu-grid">
+      <div class="menu-card" onclick="openReport('entry')">
+        <div class="icon">🚫</div><div class="label">منع دخول</div>
+      </div>
+      <div class="menu-card" onclick="openReport('exit')">
+        <div class="icon">🔒</div><div class="label">منع خروج</div>
+      </div>
+      <div class="menu-card" onclick="openReport('security')">
+        <div class="icon">🚨</div><div class="label">ملاحظة أمنية</div>
+      </div>
+      <div class="menu-card" onclick="openReport('safety')">
+        <div class="icon">⚠️</div><div class="label">ملاحظة سلامة</div>
+      </div>
+      <div class="menu-card wide" onclick="openReport('alert')" style="border-color:#fecaca; background:#fef2f2;">
+        <div class="icon">🔐</div><div class="label" style="color:#dc2626;">بلاغ أمني</div>
+      </div>
+      <div class="menu-card wide" onclick="openReport('patrol')" style="border-color:#d1fae5; background:#f0fdf4;">
+        <div class="icon">🚓</div><div class="label" style="color:#059669;">جولة أمنية</div>
+      </div>
+      <div class="menu-card wide" onclick="nav('visit')" style="border-color:#e9d5ff; background:#faf5ff;">
+        <div class="icon">✒️</div><div class="label" style="color:#7c3aed;">تقرير الزيارات</div>
+      </div>
+      <div class="menu-card wide amber" onclick="openReport('lighting')">
+        <div class="icon">💡</div><div class="label">تقرير الإنارة والسياجات</div>
+      </div>
+      <div class="menu-card wide" onclick="openReport('rain')" style="border-color:#bae6fd; background:#f0f9ff;">
+        <div class="icon">🌧️</div><div class="label" style="color:#0369a1;">تقرير الحالة المطرية</div>
+      </div>
+      <div class="menu-card wide" onclick="nav('training')" style="border-color:#c7d2fe; background:#eef2ff;">
+        <div class="icon">🖥️</div><div class="label" style="color:#4338ca;">دورة تدريبية</div>
+      </div>
+      <div class="menu-card wide" onclick="nav('archive')" style="border-color:#a7f3d0; background:#ecfdf5;">
+        <div class="icon">📂</div><div class="label" style="color:#065f46;">أرشيف التقارير</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= تقرير عام (منع دخول / منع خروج / ملاحظة / بلاغ) ======= -->
+  <div id="report" class="page">
+    <div class="page-header">
+      <span class="page-title" id="rpt_title">التقرير</span>
+      <button class="back-btn" onclick="nav('menu')">← القائمة</button>
+    </div>
+
+    <!-- معلومات أساسية -->
+    <label>👤 اسم رجل الأمن</label>
+    <input id="rpt_guard" placeholder="اكتب اسمك...">
+
+    <div class="row">
+      <div class="col">
+        <label>الوردية</label>
+        <select id="rpt_shift">
+          <option>الأولى</option>
+          <option selected>الثانية</option>
+          <option>الثالثة</option>
+          <option>الرابعة</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>الفترة</label>
+        <select id="rpt_period">
+          <option>صباحية ☀️</option>
+          <option>مسائية 🌑</option>
+          <option>ليلية 🌙</option>
+        </select>
+      </div>
+    </div>
+
+    <label>📍 الموقع</label>
+    <input id="rpt_loc" placeholder="اكتب الموقع...">
+
+    <hr class="divider">
+
+    <!-- الأسباب الجاهزة -->
+    <div id="rpt_presets_section">
+      <label id="rpt_presets_label">📋 أسباب جاهزة</label>
+      <select id="rpt_preset_select" onchange="applyPreset()">
+        <option value="">— اختر سبباً جاهزاً —</option>
+      </select>
+    </div>
+
+    <label>📝 تفاصيل البلاغ</label>
+    <textarea id="rpt_detail" rows="4" placeholder="اكتب التفاصيل..." oninput="updatePreview()"></textarea>
+
+    <!-- طريقة التلقي - تظهر فقط في البلاغ الأمني -->
+    <div id="rpt_channel_section" style="display:none;">
+      <label>📡 طريقة تلقي البلاغ</label>
+      <select id="rpt_channel" onchange="updatePreview()">
+        <option value="">— اختر طريقة التلقي —</option>
+        <option value="عن طريق الإيميل 📧">عن طريق الإيميل 📧</option>
+        <option value="عن طريق الهاتف 📞">عن طريق الهاتف 📞</option>
+        <option value="عن طريق الراديو 📻">عن طريق الراديو 📻</option>
+      </select>
+    </div>
+
+    <hr class="divider">
+
+    <!-- بيانات الشخص -->
+    <label>👤 بيانات الشخص <span style="font-weight:400; color:#94a3b8;">(اختياري)</span></label>
+    <div class="row">
+      <div class="col">
+        <input id="rpt_nm" placeholder="الاسم..." oninput="updatePreview()">
+      </div>
+      <div class="col">
+        <input id="rpt_id" placeholder="الرقم / اللوحة..." oninput="updatePreview()">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- المعاينة -->
+    <div class="preview-box">
+      <div class="preview-title">👁️ معاينة التقرير</div>
+      <div class="preview-content" id="rpt_preview"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="copyReport()">📋 نسخ التقرير</button>
+    <button class="btn btn-clear" onclick="clearReport()">🗑️ مسح</button>
+  </div>
+
+  <!-- ======= تقرير الزيارات ======= -->
+  <div id="visit" class="page">
+    <div class="page-header">
+      <span class="page-title">✒️ تقرير الزيارات</span>
+      <button class="back-btn" onclick="nav('menu')">← القائمة</button>
+    </div>
+
+    <label>👤 اسم رجل الأمن</label>
+    <input id="vt_guard" placeholder="اكتب اسمك..." oninput="updateVisitPreview()">
+
+    <div class="row">
+      <div class="col">
+        <label>الوردية</label>
+        <select id="vt_shift" onchange="updateVisitPreview()">
+          <option>الأولى</option>
+          <option selected>الثانية</option>
+          <option>الثالثة</option>
+          <option>الرابعة</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>الفترة</label>
+        <select id="vt_period" onchange="updateVisitPreview()">
+          <option>صباحية ☀️</option>
+          <option>مسائية 🌑</option>
+          <option>ليلية 🌙</option>
+        </select>
+      </div>
+    </div>
+
+    <label>📍 الموقع</label>
+    <input id="vt_loc" placeholder="اكتب الموقع..." oninput="updateVisitPreview()">
+
+    <hr class="divider">
+
+    <label>📋 موضوع الزيارة</label>
+    <select id="vt_subject" onchange="updateVisitPreview()">
+      <option>زيارة مفتش الأسلحة</option>
+      <option>زيارة مسؤول السلامة</option>
+      <option>زيارة إدارية</option>
+      <option>زيارة تفتيشية</option>
+      <option>أخرى</option>
+    </select>
+
+    <div class="row">
+      <div class="col">
+        <label>⏰ وقت الدخول</label>
+        <input type="time" id="vt_in" oninput="updateVisitPreview()">
+      </div>
+      <div class="col">
+        <label>⏰ وقت الخروج</label>
+        <input type="time" id="vt_out" oninput="updateVisitPreview()">
+      </div>
+    </div>
+
+    <label>📝 تفاصيل الزيارة</label>
+    <textarea id="vt_detail" rows="4" placeholder="اكتب تفاصيل الزيارة..." oninput="updateVisitPreview()"></textarea>
+
+    <hr class="divider">
+
+    <label>👤 بيانات الزائر <span style="font-weight:400; color:#94a3b8;">(اختياري)</span></label>
+    <div class="row">
+      <div class="col">
+        <input id="vt_nm" placeholder="الاسم..." oninput="updateVisitPreview()">
+      </div>
+      <div class="col">
+        <input id="vt_id" placeholder="الرقم / الجهة..." oninput="updateVisitPreview()">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="preview-box">
+      <div class="preview-title">👁️ معاينة التقرير</div>
+      <div class="preview-content" id="vt_preview"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="copyVisit()">📋 نسخ تقرير الزيارة</button>
+    <button class="btn btn-clear" onclick="clearVisit()">🗑️ مسح</button>
+  </div>
+
+  <!-- ======= تقرير المطر ======= -->
+  <div id="rain" class="page">
+    <div class="page-header">
+      <span class="page-title">🌧️ الحالة المطرية</span>
+      <button class="back-btn" onclick="nav('menu')">← القائمة</button>
+    </div>
+
+    <label>👤 اسم رجل الأمن</label>
+    <input id="rn_guard" placeholder="اكتب اسمك...">
+
+    <div class="row">
+      <div class="col">
+        <label>الوردية</label>
+        <select id="rn_shift">
+          <option>الأولى</option>
+          <option selected>الثانية</option>
+          <option>الثالثة</option>
+          <option>الرابعة</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>الفترة</label>
+        <select id="rn_period">
+          <option>صباحية ☀️</option>
+          <option>مسائية 🌑</option>
+          <option>ليلية 🌙</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>📍 الموقع</label>
+        <input id="rn_loc" placeholder="اكتب الموقع...">
+      </div>
+      <div class="col">
+        <label>⏰ الوقت</label>
+        <input type="time" id="rn_time">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <label>☁️ حالة الطقس</label>
+    <select id="rn_status" onchange="updateRainPreview()">
+      <option>أمطار غزيرة</option>
+      <option>أمطار متوسطة</option>
+      <option>أمطار خفيفة</option>
+      <option>تحذير من أمطار</option>
+      <option>انقطاع الأمطار</option>
+    </select>
+
+    <label>📝 الملاحظات</label>
+    <textarea id="rn_notes" rows="3" placeholder="اكتب الملاحظات والإجراءات المتخذة..." oninput="updateRainPreview()">لا توجد أضرار ولله الحمد، والوضع تحت المتابعة.</textarea>
+
+    <hr class="divider">
+
+    <div class="preview-box">
+      <div class="preview-title">👁️ معاينة التقرير</div>
+      <div class="preview-content" id="rn_preview"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="copyRain()">📋 نسخ تقرير المطر</button>
+    <button class="btn btn-clear" onclick="clearRain()">🗑️ مسح</button>
+  </div>
+
+  <!-- ======= تقرير الإنارة ======= -->
+  <div id="lighting" class="page">
+    <div class="page-header">
+      <span class="page-title">💡 تقرير الإنارة</span>
+      <button class="back-btn" onclick="nav('menu')">← القائمة</button>
+    </div>
+
+    <label>👤 اسم رجل الأمن</label>
+    <input id="lt_guard" placeholder="اكتب اسمك...">
+
+    <div class="row">
+      <div class="col">
+        <label>الوردية</label>
+        <select id="lt_shift">
+          <option>الأولى</option>
+          <option selected>الثانية</option>
+          <option>الثالثة</option>
+          <option>الرابعة</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>الفترة</label>
+        <select id="lt_period">
+          <option>ليلية 🌙</option>
+          <option>مسائية 🌑</option>
+          <option>صباحية ☀️</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>الوقت</label>
+        <input type="time" id="lt_time">
+      </div>
+      <div class="col">
+        <label>📍 الموقع</label>
+        <input id="lt_loc" placeholder="اكتب الموقع...">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div id="lt_dirs"></div>
+
+    <hr class="divider">
+
+    <div class="totals-box">
+      <label style="margin-top:0;">📊 الإجمالي</label>
+      <div class="row" style="margin-top:8px;">
+        <div class="col">
+          <label style="font-size:0.78rem; color:#059669; margin-top:0;">▫️ إجمالي المضاءة</label>
+          <input id="lt_ton" readonly style="background:#f0fdf4; font-weight:800; color:#059669; text-align:center;">
+        </div>
+        <div class="col">
+          <label style="font-size:0.78rem; color:#dc2626; margin-top:0;">▪️ إجمالي الغير مضاءة</label>
+          <input id="lt_toff" readonly style="background:#fef2f2; font-weight:800; color:#dc2626; text-align:center;">
+        </div>
+      </div>
+      <label style="margin-top:12px;">الإنارة الداخلية</label>
+      <select id="lt_internal">
+        <option>مطفأة بشكل شبه كامل</option>
+        <option>مضاءة بالكامل</option>
+        <option>مضاءة جزئياً</option>
+        <option>مطفأة بالكامل</option>
+      </select>
+    </div>
+
+    <div class="preview-box" style="margin-top:16px;">
+      <div class="preview-title">👁️ معاينة التقرير</div>
+      <div class="preview-content" id="lt_preview"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="copyLighting()">📋 نسخ تقرير الإنارة</button>
+    <button class="btn btn-clear" onclick="clearLighting()">🗑️ مسح</button>
+  </div>
+
+  <!-- ======= دورة تدريبية ======= -->
+  <div id="training" class="page">
+    <div class="page-header">
+      <span class="page-title">🖥️ دورة تدريبية</span>
+      <button class="back-btn" onclick="nav('menu')">← القائمة</button>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>الوردية</label>
+        <select id="tr_shift" onchange="updateTrainingPreview()">
+          <option>الأولى</option>
+          <option selected>الثانية</option>
+          <option>الثالثة</option>
+          <option>الرابعة</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>الفترة</label>
+        <select id="tr_period" onchange="updateTrainingPreview()">
+          <option>صباحية ☀️</option>
+          <option>مسائية 🌑</option>
+          <option>ليلية 🌙</option>
+        </select>
+      </div>
+    </div>
+
+    <label>📍 الموقع</label>
+    <input id="tr_loc" placeholder="اكتب الموقع..." oninput="updateTrainingPreview()">
+
+    <label>⏰ الوقت</label>
+    <input type="time" id="tr_time" oninput="updateTrainingPreview()">
+
+    <label>📝 تفاصيل إضافية <span style="font-weight:400; color:#94a3b8;">(اختياري)</span></label>
+    <textarea id="tr_detail" rows="2" placeholder="للعلم والإحاطة تم أخذ دورات تدريبية..." oninput="updateTrainingPreview()">للعلم والإحاطة تم أخذ دورات تدريبية في النظام.</textarea>
+
+    <hr class="divider">
+
+    <!-- الدورات والمشاركون -->
+    <label style="color:#4338ca; font-size:1rem;">📋 الدورات والمشاركون</label>
+    <div id="tr_entries"></div>
+    <button onclick="addTrainingEntry()" style="width:100%; margin-top:10px; padding:12px; background:#eef2ff; border:2px dashed #c7d2fe; border-radius:12px; color:#4338ca; font-weight:800; font-size:0.95rem; cursor:pointer;">+ إضافة دورة ومشارك</button>
+
+    <hr class="divider">
+
+    <div class="preview-box">
+      <div class="preview-title">👁️ معاينة التقرير</div>
+      <div class="preview-content" id="tr_preview"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="copyTraining()">📋 نسخ تقرير الدورة</button>
+    <button class="btn btn-clear" onclick="clearTraining()">🗑️ مسح</button>
+  </div>
+
+  <!-- ======= أرشيف التقارير ======= -->
+  <div id="archive" class="page">
+    <div class="page-header">
+      <span class="page-title">📂 أرشيف التقارير</span>
+      <button class="back-btn" onclick="nav('menu')">← القائمة</button>
+    </div>
+
+    <!-- إحصائيات -->
+    <div id="arc_stats" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;"></div>
+
+    <!-- فلتر -->
+    <div class="row" style="margin-bottom:16px;">
+      <div class="col">
+        <select id="arc_filter_type" onchange="renderArchive()">
+          <option value="">كل الأنواع</option>
+          <option value="منع دخول">🚫 منع دخول</option>
+          <option value="منع خروج">🔒 منع خروج</option>
+          <option value="ملاحظة أمنية">🚨 ملاحظة أمنية</option>
+          <option value="ملاحظة سلامة">⚠️ ملاحظة سلامة</option>
+          <option value="بلاغ أمني">🔐 بلاغ أمني</option>
+          <option value="جولة أمنية">🚓 جولة أمنية</option>
+          <option value="زيارة">✒️ زيارة</option>
+          <option value="إنارة">💡 إنارة</option>
+          <option value="مطر">🌧️ مطر</option>
+          <option value="دورة">🖥️ دورة</option>
+        </select>
+      </div>
+      <div class="col">
+        <input type="date" id="arc_filter_date" onchange="renderArchive()">
+      </div>
+    </div>
+
+    <!-- قائمة التقارير -->
+    <div id="arc_list"></div>
+
+    <!-- أزرار -->
+    <button class="btn btn-primary" onclick="exportExcel()" style="margin-top:16px;">📊 تصدير إكسل</button>
+    <button class="btn btn-clear" onclick="clearArchive()">🗑️ مسح الأرشيف</button>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// البيانات الجاهزة لكل نوع تقرير
+// ============================================================
+const REPORT_TYPES = {
+  entry: {
+    title: '🚫 منع دخول',
+    presets: [
+      'تم منع دخول مقاول لعدم وجود تصريح أمني معتمد للموقع.',
+      'تم منع دخول موظف مقاول لعدم تخويل بطاقته الدخول إلى هذا الموقع.',
+      'تم منع دخول جوال مزود بكاميرا لعدم السماح بإدخال أجهزة التصوير.',
+      'تم منع دخول مقاول لعدم وجود ترميز للموقع.',
+      'تم منع دخول مركبة لعدم حملها لوحة مرور معتمدة.',
+      'تم منع دخول زائر لعدم وجود تصريح مسبق أو موافقة من الجهة المختصة.',
+      'تم منع دخول شخص خارج أوقات العمل الرسمية المحددة.',
+      'تم منع دخول مركبة نقل لعدم استيفاء إجراءات التفتيش الأمني.',
+      'تم منع دخول مقاول لانتهاء صلاحية تصريح الدخول الخاص به.',
+      'تم منع دخول شخص لعدم ارتدائه معدات الحماية الشخصية المطلوبة.',
+    ]
+  },
+  exit: {
+    title: '🔒 منع خروج',
+    presets: [
+      'تم منع خروج مركبة لعدم استكمال إجراءات التفتيش عند البوابة.',
+      'تم منع خروج موظف حاملاً أجهزة أو مواد دون تصريح إخراج معتمد.',
+      'تم منع خروج مقاول لعدم إنهاء إجراءات التسليم الرسمية.',
+      'تم إيقاف مركبة عند الخروج واكتشاف محتوى غير مرخص بإخراجه.',
+      'تم منع خروج شخص ريثما يتم التحقق من هويته ومستنداته.',
+      'تم منع خروج مواد من الموقع لعدم وجود إذن إخراج رسمي.',
+    ]
+  },
+  security: {
+    title: '🚨 ملاحظة أمنية',
+    presets: [
+      'تم رصد شخص في منطقة غير مرخص بها داخل الموقع، تم إخطاره وإعادة توجيهه.',
+      'تم رصد مركبة مجهولة تتوقف بالقرب من بوابة الموقع لفترة مطولة، تم إخطار المشرف.',
+      'لوحظ تدهور في حالة إضاءة المحيط الخارجي مما يؤثر على مستوى المراقبة.',
+      'تم التحقق من صوت مريب في المحيط الخارجي، ولم يُعثر على أي شيء غير اعتيادي.',
+      'لوحظ خلل في نظام الكاميرات الأمنية، تم رفع بلاغ للصيانة.',
+      'تم رصد حركة مشبوهة بالقرب من السياج الأمني، تم تعزيز الدورية وتوثيق الواقعة.',
+      'تم استلام بلاغ أمني من عمليات الأمن الصناعي بأخذ الحيطة والحذر ورفع الجاهزية.',
+    ]
+  },
+  safety: {
+    title: '⚠️ ملاحظة سلامة',
+    presets: [
+      'لوحظ عدم ارتداء أحد العمال معدات الحماية الشخصية أثناء العمل، تم تنبيهه.',
+      'تم رصد سلوك غير آمن من أحد المقاولين داخل الموقع، تم توجيهه وتوثيق الملاحظة.',
+      'لوحظ وجود مواد قابلة للاشتعال في منطقة غير مخصصة لها، تم معالجة الوضع.',
+      'تعطل باب طوارئ في الموقع، تم رفع بلاغ للصيانة وتأمين المنطقة.',
+      'لوحظ وجود أسلاك كهربائية مكشوفة، تم عزل الموقع وإخطار المختص.',
+      'تم رصد تسرب في أحد الخطوط، تم إخطار الجهة المختصة فوراً.',
+      'لوحظ تلف في السياج الأمني للموقع، تم توثيق الحالة ورفع بلاغ للصيانة.',
+    ]
+  },
+  alert: {
+    title: '🔐 بلاغ أمني',
+    presets: [
+      'تم اكتشاف جسم مشبوه داخل نطاق الموقع، تم تأمين المنطقة وإخطار الجهات المختصة.',
+      'أبلغ أحد الموظفين عن فقدان بطاقة هويته الأمنية، تم تعليق صلاحيتها وتوثيق البلاغ.',
+      'تم استلام بلاغ أمني بأخذ أقصى درجات الحيطة والحذر وتعزيز الإجراءات الأمنية.',
+      'تم رصد محاولة تصوير داخل الموقع، تم ضبط الشخص وإخطار المشرف المباشر.',
+      'وقع شجار داخل نطاق الموقع، تم فض النزاع وإخطار المشرف وتوثيق الحادثة.',
+      'اكتُشف عطل في نظام إنذار الحريق، تم إخطار الصيانة ورفع مستوى المراقبة اليدوية.',
+      'تم إجراء فرضية أمنية داخل الموقع واتخاذ الإجراءات اللازمة وفق البروتوكول المعتمد.',
+    ]
+  },
+  patrol: {
+    title: '🚓 جولة أمنية',
+    presets: []
+  }
+};
+
+const LT_DIRS = ['الشمالية','الجنوبية','الشرقية','الغربية'];
+
+// ============================================================
+// التنقل
+// ============================================================
+let currentType = '';
+
+function nav(pageId) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0, 0);
+  if (pageId === 'archive') renderArchive();
+}
+
+function openReport(type) {
+  if (type === 'lighting') { initLighting(); nav('lighting'); return; }
+  if (type === 'rain') { initRain(); nav('rain'); return; }
+  currentType = type;
+  const cfg = REPORT_TYPES[type];
+  document.getElementById('rpt_title').textContent = cfg.title;
+  const sel = document.getElementById('rpt_preset_select');
+  const presetsSection = document.getElementById('rpt_presets_section');
+
+  if (!cfg.presets || cfg.presets.length === 0) {
+    presetsSection.style.display = 'none';
+  } else {
+    presetsSection.style.display = 'block';
+    sel.innerHTML = '<option value="">— اختر سبباً جاهزاً —</option>';
+    cfg.presets.forEach(function(p, i){
+      const opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = (i+1) + '. ' + p.substring(0, 45) + '...';
+      sel.appendChild(opt);
+    });
+  }
+  updatePreview();
+  nav('report');
+  // إظهار حقل طريقة التلقي فقط في البلاغ الأمني
+  var channelSection = document.getElementById('rpt_channel_section');
+  channelSection.style.display = (type === 'alert') ? 'block' : 'none';
+  document.getElementById('rpt_channel').value = '';
+}
+
+function applyPreset() {
+  const val = document.getElementById('rpt_preset_select').value;
+  if (!val) return;
+  document.getElementById('rpt_detail').value = val;
+  updatePreview();
+}
+
+// ============================================================
+// بناء التقرير
+// ============================================================
+function g(id) { return (document.getElementById(id) && document.getElementById(id).value) || ''; }
+
+function buildReport() {
+  const d = new Date();
+  const ds = d.toLocaleDateString('en-GB');
+  const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const tm = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  const L  = '━━━━━━━━━━';
+  const L2 = '┄┄┄┄┄┄┄┄┄┄';
+  const cfg = REPORT_TYPES[currentType];
+  const guard = g('rpt_guard') || '— لم يُكتب الاسم —';
+
+  var t = '';
+  t += L + '\n';
+  t += (cfg ? cfg.title : 'تقرير أمني') + '\n';
+  t += L + '\n';
+  t += '📍 الموقع   :  ' + (g('rpt_loc') || '—') + '\n';
+  t += '📅 التاريخ  :  *' + days[d.getDay()] + '*  ( ' + ds + ' )\n';
+  t += '⏰ الوقت    :  ' + tm + '\n';
+  t += '🔹 الوردية  :  ' + g('rpt_shift') + '  —  ' + g('rpt_period') + '\n';
+  t += L2 + '\n';
+  t += '📝 *التفاصيل :*\n' + (g('rpt_detail') || '...') + '\n';
+  var channel = g('rpt_channel');
+  if (channel) { t += L2 + '\n'; t += '📡 طريقة التلقي :  ' + channel + '\n'; }
+  var nm = g('rpt_nm'), id = g('rpt_id');
+  if (nm || id) {
+    t += L2 + '\n';
+    t += '👤 *بيانات الشخص :*\n';
+    if (nm) t += '▪ الاسم  :  ' + nm + '\n';
+    if (id) t += '▪ الرقم  :  ' + id + '\n';
+  }
+  t += L + '\n';
+  t += '👮 رجل الأمن :  *' + guard + '*\n';
+  t += L;
+  return t;
+}
+
+function updatePreview() {
+  var el = document.getElementById('rpt_preview');
+  if (el) el.innerText = buildReport();
+}
+
+function copyReport() {
+  addToArchive(
+    REPORT_TYPES[currentType] ? REPORT_TYPES[currentType].title : 'تقرير',
+    g('rpt_loc'), g('rpt_shift'), g('rpt_period'), g('rpt_detail'), g('rpt_guard')
+  );
+  copyText(buildReport());
+}
+
+function clearReport() {
+  ['rpt_guard','rpt_loc','rpt_detail','rpt_nm','rpt_id'].forEach(function(k){
+    document.getElementById(k).value = '';
+  });
+  document.getElementById('rpt_preset_select').value = '';
+  updatePreview();
+}
+
+// ============================================================
+// تقرير الزيارات
+// ============================================================
+function buildVisit() {
+  var d = new Date();
+  var ds = d.toLocaleDateString('en-GB');
+  var days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var L  = '━━━━━━━━━━';
+  var L2 = '┄┄┄┄┄┄┄┄┄┄';
+  var guard = g('vt_guard') || '— لم يُكتب الاسم —';
+  var tin  = g('vt_in')  || '—';
+  var tout = g('vt_out') || '—';
+
+  var t = '';
+  t += L + '\n';
+  t += '✒️ تقرير زيارة\n';
+  t += L + '\n';
+  t += '📍 الموقع    :  ' + (g('vt_loc') || '—') + '\n';
+  t += '📅 التاريخ   :  *' + days[d.getDay()] + '*  ( ' + ds + ' )\n';
+  t += '🔹 الوردية   :  ' + g('vt_shift') + '  —  ' + g('vt_period') + '\n';
+  t += L2 + '\n';
+  t += '📋 الموضوع   :  ' + g('vt_subject') + '\n';
+  t += '📥 الدخول    :  ' + tin + '\n';
+  t += '📤 الخروج    :  ' + tout + '\n';
+  t += L2 + '\n';
+  t += '📝 *التفاصيل :*\n' + (g('vt_detail') || '...') + '\n';
+  var nm = g('vt_nm'), id = g('vt_id');
+  if (nm || id) {
+    t += L2 + '\n';
+    t += '👤 *بيانات الزائر :*\n';
+    if (nm) t += '▪ الاسم  :  ' + nm + '\n';
+    if (id) t += '▪ الرقم  :  ' + id + '\n';
+  }
+  t += L + '\n';
+  t += '👮 المعد :  *' + guard + '*\n';
+  t += L;
+  return t;
+}
+
+function updateVisitPreview() {
+  var el = document.getElementById('vt_preview');
+  if (el) el.innerText = buildVisit();
+}
+
+function copyVisit() {
+  addToArchive('✒️ زيارة', g('vt_loc'), g('vt_shift'), g('vt_period'), g('vt_detail'), g('vt_guard'));
+  copyText(buildVisit());
+}
+
+function clearVisit() {
+  ['vt_guard','vt_loc','vt_detail','vt_nm','vt_id'].forEach(function(k){
+    document.getElementById(k).value = '';
+  });
+  document.getElementById('vt_in').value = '';
+  document.getElementById('vt_out').value = '';
+  updateVisitPreview();
+}
+
+
+// ============================================================
+// 📂 أرشيف التقارير
+// ============================================================
+
+function getArchive() {
+  try { return JSON.parse(localStorage.getItem('portal_archive') || '[]'); } catch(e) { return []; }
+}
+
+function saveArchive(data) {
+  try { localStorage.setItem('portal_archive', JSON.stringify(data)); } catch(e) {}
+}
+
+function addToArchive(type, location, shift, period, detail, guard) {
+  var arc = getArchive();
+  var d = new Date();
+  arc.unshift({
+    id: Date.now(),
+    type: type,
+    loc: location || '—',
+    shift: shift || '—',
+    period: period || '—',
+    detail: (detail || '').substring(0, 120),
+    guard: guard || '—',
+    date: d.toLocaleDateString('en-GB'),
+    time: String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'),
+    day: ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][d.getDay()]
+  });
+  saveArchive(arc);
+}
+
+function renderArchive() {
+  var arc = getArchive();
+  var filterType = document.getElementById('arc_filter_type').value;
+  var filterDate = document.getElementById('arc_filter_date').value;
+
+  // تصفية
+  if (filterType) arc = arc.filter(function(r){ return r.type && r.type.indexOf(filterType) !== -1; });
+  if (filterDate) {
+    var fd = new Date(filterDate).toLocaleDateString('en-GB');
+    arc = arc.filter(function(r){ return r.date === fd; });
+  }
+
+  // إحصائيات
+  var all = getArchive();
+  var today = new Date().toLocaleDateString('en-GB');
+  var todayCount = all.filter(function(r){ return r.date === today; }).length;
+  document.getElementById('arc_stats').innerHTML =
+    '<div class="stat-card"><div class="stat-num">' + all.length + '</div><div class="stat-lbl">إجمالي التقارير</div></div>' +
+    '<div class="stat-card"><div class="stat-num">' + todayCount + '</div><div class="stat-lbl">تقارير اليوم</div></div>' +
+    '<div class="stat-card"><div class="stat-num">' + (arc.length) + '</div><div class="stat-lbl">نتائج الفلتر</div></div>';
+
+  var list = document.getElementById('arc_list');
+  if (arc.length === 0) {
+    list.innerHTML = '<div class="arc-empty"><div class="arc-empty-icon">📭</div><div>لا توجد تقارير</div></div>';
+    return;
+  }
+
+  list.innerHTML = arc.map(function(r) {
+    return '<div class="arc-item">' +
+      '<div class="arc-item-header">' +
+        '<span class="arc-type">' + (r.type || '—') + '</span>' +
+        '<span class="arc-date">' + r.date + ' — ' + r.time + '</span>' +
+      '</div>' +
+      '<div class="arc-detail">' + (r.detail || '—') + '</div>' +
+      '<div class="arc-meta">' +
+        '<span class="arc-tag">📍 ' + r.loc + '</span>' +
+        '<span class="arc-tag">🔹 ' + r.shift + '</span>' +
+        '<span class="arc-tag">👮 ' + r.guard + '</span>' +
+      '</div>' +
+      '<div class="arc-actions">' +
+        '<button class="arc-btn" style="background:#eff6ff; color:#1e3a8a;" onclick="viewReport(' + r.id + ')">👁️ عرض</button>' +
+        '<button class="arc-btn" style="background:#fef2f2; color:#dc2626;" onclick="deleteReport(' + r.id + ')">🗑️ حذف</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function viewReport(id) {
+  var arc = getArchive();
+  var r = arc.find(function(x){ return x.id === id; });
+  if (!r) return;
+  alert(
+    r.type + '\n' +
+    '━━━━━━━━━━\n' +
+    '📍 ' + r.loc + '\n' +
+    '📅 ' + r.day + ' (' + r.date + ')\n' +
+    '⏰ ' + r.time + '\n' +
+    '🔹 ' + r.shift + ' — ' + r.period + '\n' +
+    '┄┄┄┄┄┄┄┄┄┄\n' +
+    r.detail + '\n' +
+    '━━━━━━━━━━\n' +
+    '👮 ' + r.guard
+  );
+}
+
+function deleteReport(id) {
+  if (!confirm('حذف هذا التقرير؟')) return;
+  var arc = getArchive().filter(function(r){ return r.id !== id; });
+  saveArchive(arc);
+  renderArchive();
+}
+
+function clearArchive() {
+  if (!confirm('مسح كل الأرشيف نهائياً؟')) return;
+  saveArchive([]);
+  renderArchive();
+  toast('✅ تم مسح الأرشيف');
+}
+
+function exportExcel() {
+  var arc = getArchive();
+  var filterType = document.getElementById('arc_filter_type').value;
+  var filterDate = document.getElementById('arc_filter_date').value;
+  if (filterType) arc = arc.filter(function(r){ return r.type && r.type.indexOf(filterType) !== -1; });
+  if (filterDate) {
+    var fd = new Date(filterDate).toLocaleDateString('en-GB');
+    arc = arc.filter(function(r){ return r.date === fd; });
+  }
+  if (arc.length === 0) { toast('⚠️ لا توجد تقارير للتصدير'); return; }
+
+  var rows = [['النوع','التاريخ','اليوم','الوقت','الموقع','الوردية','الفترة','التفاصيل','رجل الأمن']];
+  arc.forEach(function(r){
+    rows.push([r.type, r.date, r.day, r.time, r.loc, r.shift, r.period, r.detail, r.guard]);
+  });
+
+  var tsv = rows.map(function(r){ return r.join('\t'); }).join('\n');
+  copyText(tsv);
+  toast('✅ تم نسخ البيانات — الصقها في إكسل');
+}
+
+// ============================================================
+// الدورة التدريبية
+// ============================================================
+var trEntries = [];
+var trCounter = 0;
+
+function addTrainingEntry() {
+  trCounter++;
+  var id = 'tr_entry_' + trCounter;
+  trEntries.push(id);
+  var container = document.getElementById('tr_entries');
+  var div = document.createElement('div');
+  div.id = id;
+  div.style.cssText = 'background:#f8faff; border:1.5px solid #c7d2fe; border-radius:12px; padding:12px; margin-bottom:10px; position:relative;';
+  div.innerHTML =
+    '<button onclick="removeTrainingEntry(\'' + id + '\')" style="position:absolute; top:8px; left:8px; background:#fef2f2; border:none; border-radius:8px; padding:4px 8px; color:#dc2626; font-weight:bold; cursor:pointer; font-size:0.8rem;">✕ حذف</button>' +
+    '<label style="margin-top:0; color:#4338ca;">اسم الدورة</label>' +
+    '<input id="' + id + '_course" placeholder="اسم الدورة التدريبية..." oninput="updateTrainingPreview()" style="margin-bottom:8px;">' +
+    '<label style="color:#4338ca;">👮 اسم المشارك</label>' +
+    '<input id="' + id + '_name" placeholder="اسم رجل الأمن..." oninput="updateTrainingPreview()">';
+  container.appendChild(div);
+  updateTrainingPreview();
+}
+
+function removeTrainingEntry(id) {
+  var el = document.getElementById(id);
+  if (el) el.remove();
+  trEntries = trEntries.filter(function(e){ return e !== id; });
+  updateTrainingPreview();
+}
+
+function buildTraining() {
+  var d = new Date();
+  var ds = d.toLocaleDateString('en-GB');
+  var days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var L  = '━━━━━━━━━━';
+  var L2 = '┄┄┄┄┄┄┄┄┄┄';
+  var tm = g('tr_time') || (String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'));
+
+  var t = '';
+  t += L + '\n';
+  t += '🖥️ *دورة تدريبية*\n';
+  t += L + '\n';
+  t += '📍 الموقع   :  ' + (g('tr_loc') || '—') + '\n';
+  t += '📅 التاريخ  :  *' + days[d.getDay()] + '*  ( ' + ds + ' )\n';
+  t += '⏰ الوقت    :  ' + tm + '\n';
+  t += '🔹 الوردية  :  ' + g('tr_shift') + '  —  ' + g('tr_period') + '\n';
+  t += L2 + '\n';
+  t += '📝 *التفاصيل :*\n' + (g('tr_detail') || '...') + '\n';
+
+  document.querySelectorAll('[id^="tr_entry_"]').forEach(function(el) {
+    var eid = el.id;
+    var course = g(eid + '_course');
+    var name   = g(eid + '_name');
+    if (course || name) {
+      t += L + '\n';
+      if (course) t += '*' + course + '*\n';
+      if (name)   t += '👮 ' + name + '\n';
+    }
+  });
+  t += L;
+  return t;
+}
+
+function updateTrainingPreview() {
+  var el = document.getElementById('tr_preview');
+  if (el) el.innerText = buildTraining();
+}
+
+function copyTraining() {
+  addToArchive('🖥️ دورة', g('tr_loc'), g('tr_shift'), g('tr_period'), g('tr_detail'), '—');
+  copyText(buildTraining());
+}
+
+function clearTraining() {
+  ['tr_loc','tr_detail'].forEach(function(k){ document.getElementById(k).value = ''; });
+  document.getElementById('tr_entries').innerHTML = '';
+  trEntries = []; trCounter = 0;
+  updateTrainingPreview();
+}
+
+// ============================================================
+// تقرير المطر
+// ============================================================
+function initRain() {
+  var now = new Date();
+  document.getElementById('rn_time').value = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  updateRainPreview();
+}
+
+function buildRain() {
+  var d = new Date();
+  var ds = d.toLocaleDateString('en-GB');
+  var days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var L  = '━━━━━━━━━━';
+  var L2 = '┄┄┄┄┄┄┄┄┄┄';
+  var guard = g('rn_guard') || '— لم يُكتب الاسم —';
+
+  var t = '';
+  t += L + '\n';
+  t += '🌧️ تقرير الحالة المطرية\n';
+  t += L + '\n';
+  t += '📍 الموقع   :  ' + (g('rn_loc') || '—') + '\n';
+  t += '📅 التاريخ  :  *' + days[d.getDay()] + '*  ( ' + ds + ' )\n';
+  t += '⏰ الوقت    :  ' + g('rn_time') + '\n';
+  t += '🔹 الوردية  :  ' + g('rn_shift') + '  —  ' + g('rn_period') + '\n';
+  t += L2 + '\n';
+  t += '☁️ حالة الطقس : ' + g('rn_status') + '\n';
+  t += L2 + '\n';
+  t += '📝 *الملاحظات :*\n' + (g('rn_notes') || '...') + '\n';
+  t += L + '\n';
+  t += '👮 رجل الأمن :  *' + guard + '*\n';
+  t += L;
+  return t;
+}
+
+function updateRainPreview() {
+  var el = document.getElementById('rn_preview');
+  if (el) el.innerText = buildRain();
+}
+
+function copyRain() {
+  addToArchive('🌧️ مطر', g('rn_loc'), g('rn_shift'), g('rn_period'), g('rn_notes'), g('rn_guard'));
+  copyText(buildRain());
+}
+
+function clearRain() {
+  ['rn_guard','rn_loc','rn_notes'].forEach(function(k){ document.getElementById(k).value = ''; });
+  updateRainPreview();
+}
+
+// ============================================================
+// تقرير الإنارة
+// ============================================================
+function initLighting() {
+  var now = new Date();
+  document.getElementById('lt_time').value = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+  var html = '';
+  for (var i = 0; i < LT_DIRS.length; i++) {
+    html += '<div class="dir-card">';
+    html += '<div class="dir-title">🧭 الجهة ' + LT_DIRS[i] + '</div>';
+    html += '<div class="row">';
+    html += '<div class="col"><label style="font-size:0.78rem; color:#059669; margin-top:0;">▫️ المضاءة</label>';
+    html += '<input type="number" id="lt_on_' + i + '" min="0" value="0" oninput="calcTotals()" style="text-align:center; font-weight:800; border-color:#bbf7d0;"></div>';
+    html += '<div class="col"><label style="font-size:0.78rem; color:#dc2626; margin-top:0;">▪️ الغير مضاءة</label>';
+    html += '<input type="number" id="lt_off_' + i + '" min="0" value="0" oninput="calcTotals()" style="text-align:center; font-weight:800; border-color:#fecaca;"></div>';
+    html += '</div>';
+    html += '<div class="row" style="margin-top:8px;">';
+    html += '<div class="col"><label style="font-size:0.78rem; margin-top:0;">حالة السياج</label>';
+    html += '<select id="lt_fence_' + i + '" onchange="updateLtPreview()"><option>جيدة</option><option>متوسطة</option><option>سيئة</option><option>تالفة</option></select></div>';
+    html += '<div class="col"><label style="font-size:0.78rem; margin-top:0;">درجة الخطورة</label>';
+    html += '<select id="lt_risk_' + i + '" onchange="updateLtPreview()"><option>عالية</option><option>متوسطة</option><option>منخفضة</option></select></div>';
+    html += '</div>';
+    html += '<label style="font-size:0.78rem; margin-top:8px;">مستوى الرؤية</label>';
+    html += '<select id="lt_vis_' + i + '" onchange="updateLtPreview()"><option>ضعيف</option><option>متوسط</option><option>جيد</option><option>ممتاز</option></select>';
+    html += '</div>';
+  }
+  document.getElementById('lt_dirs').innerHTML = html;
+  calcTotals();
+}
+
+function calcTotals() {
+  var on = 0, off = 0;
+  for (var i = 0; i < LT_DIRS.length; i++) {
+    on  += parseInt(document.getElementById('lt_on_'  + i).value || 0);
+    off += parseInt(document.getElementById('lt_off_' + i).value || 0);
+  }
+  document.getElementById('lt_ton').value  = on;
+  document.getElementById('lt_toff').value = off;
+  updateLtPreview();
+}
+
+function buildLighting() {
+  var d = new Date();
+  var ds = d.toLocaleDateString('en-GB');
+  var days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var L  = '━━━━━━━━━━';
+  var L2 = '┄┄┄┄┄┄┄┄┄┄';
+  var guard = g('lt_guard') || '— لم يُكتب الاسم —';
+
+  var t = '';
+  t += L + '\n';
+  t += '💡 تقرير الإنارة والسياجات الأمنية\n';
+  t += L + '\n';
+  t += '📍 الموقع   :  ' + (g('lt_loc') || '—') + '\n';
+  t += '📅 التاريخ  :  *' + days[d.getDay()] + '*  ( ' + ds + ' )\n';
+  t += '⏰ الوقت    :  ' + g('lt_time') + '\n';
+  t += '🔹 الوردية  :  ' + g('lt_shift') + '  —  ' + g('lt_period') + '\n';
+  t += L2 + '\n';
+  t += '📝 *التفاصيل :*\nتم متابعة الإنارة والسياج الأمني للموقع، وذلك لحصر عدد أعمدة الإنارة المضاءة وغير المضاءة، وحالة السياج الأمني.\n';
+
+  for (var i = 0; i < LT_DIRS.length; i++) {
+    t += L2 + '\n';
+    t += '🧭 *الجهة ' + LT_DIRS[i] + ':*\n';
+    t += '▫️ الإنارة المضاءة: '       + (document.getElementById('lt_on_'    + i) ? document.getElementById('lt_on_'    + i).value : '0') + '\n';
+    t += '▪️ الإنارة الغير مضاءة: '   + (document.getElementById('lt_off_'   + i) ? document.getElementById('lt_off_'   + i).value : '0') + '\n';
+    t += '▪️ حالة السياج الأمني: '    + (document.getElementById('lt_fence_' + i) ? document.getElementById('lt_fence_' + i).value : '') + '\n';
+    t += '▪️ درجة الخطورة: '          + (document.getElementById('lt_risk_'  + i) ? document.getElementById('lt_risk_'  + i).value : '') + '\n';
+    t += '💡 مستوى الرؤية: '          + (document.getElementById('lt_vis_'   + i) ? document.getElementById('lt_vis_'   + i).value : '') + '\n';
+  }
+
+  t += L2 + '\n';
+  t += '📊 *الإجمالي:*\n';
+  t += '▪️ إجمالي الإنارة المضاءة: '      + g('lt_ton')  + '\n';
+  t += '▪️ إجمالي الإنارة الغير مضاءة: '  + g('lt_toff') + '\n';
+  t += '▪️ الإنارة الداخلية: '             + g('lt_internal') + '\n';
+  t += L + '\n';
+  t += '👮 *رجل الأمن :*  ' + guard + '\n';
+  t += L;
+  return t;
+}
+
+function updateLtPreview() {
+  var el = document.getElementById('lt_preview');
+  if (el) el.innerText = buildLighting();
+}
+
+function copyLighting() {
+  addToArchive('💡 إنارة', g('lt_loc'), g('lt_shift'), g('lt_period'), 'تقرير إنارة وسياجات أمنية', g('lt_guard'));
+  copyText(buildLighting());
+}
+
+function clearLighting() {
+  ['lt_guard','lt_loc'].forEach(function(k){ document.getElementById(k).value = ''; });
+  calcTotals();
+}
+
+// ============================================================
+// مساعدات
+// ============================================================
+function copyText(t) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(t).then(function(){ toast('✅ تم النسخ'); }).catch(function(){ fallbackCopy(t); });
+  } else { fallbackCopy(t); }
+}
+
+function fallbackCopy(t) {
+  var el = document.createElement('textarea');
+  el.value = t; document.body.appendChild(el); el.select();
+  document.execCommand('copy'); document.body.removeChild(el);
+  toast('✅ تم النسخ');
+}
+
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2000);
+}
+
+// تحديث المعاينة عند تغيير أي حقل في تقرير الإنارة
+document.addEventListener('change', function(e){
+  if (e.target.id && e.target.id.startsWith('lt_')) updateLtPreview();
+  if (e.target.id && e.target.id.startsWith('rn_')) updateRainPreview();
+  if (e.target.id === 'rpt_period' || e.target.id === 'rpt_shift') updatePreview();
+});
+document.addEventListener('input', function(e){
+  if (e.target.id && e.target.id.startsWith('lt_')) updateLtPreview();
+  else if (e.target.id && e.target.id.startsWith('rn_')) updateRainPreview();
+  else if (e.target.id && e.target.id.startsWith('rpt_')) updatePreview();
+});
+</script>
+</body>
+</html>
