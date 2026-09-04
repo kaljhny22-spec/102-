@@ -134,7 +134,7 @@ textarea { resize: vertical; }
         <div class="icon">✒️</div><div class="label" style="color:#7c3aed;">تقرير الزيارات</div>
       </div>
       <div class="menu-card wide amber" onclick="openReport('lighting')">
-        <div class="icon">💡</div><div class="label">تقرير الإنارة والسياجات</div>
+        <div class="icon">💡</div><div class="label">تقرير الإنارة والسياح</div>
       </div>
       <div class="menu-card wide" onclick="openReport('rain')" style="border-color:#bae6fd; background:#f0f9ff;">
         <div class="icon">🌧️</div><div class="label" style="color:#0369a1;">تقرير الحالة المطرية</div>
@@ -204,6 +204,22 @@ textarea { resize: vertical; }
         <option value="عن طريق الهاتف 📞">عن طريق الهاتف 📞</option>
         <option value="عن طريق الراديو 📻">عن طريق الراديو 📻</option>
       </select>
+    </div>
+
+    <!-- بيانات الدورية - تظهر فقط في الجولة الأمنية -->
+    <div id="rpt_patrol_section" style="display:none;">
+      <hr class="divider">
+      <label style="color:#059669; font-size:0.95rem;">🚓 بيانات الدورية الأمنية</label>
+      <div class="row">
+        <div class="col">
+          <label>رقم الدورية</label>
+          <input id="rpt_patrol_num" placeholder="مثال: W00183" oninput="updatePreview()">
+        </div>
+        <div class="col">
+          <label>رقم اللوحة</label>
+          <input id="rpt_patrol_plate" placeholder="رقم اللوحة..." oninput="updatePreview()">
+        </div>
+      </div>
     </div>
 
     <hr class="divider">
@@ -666,6 +682,11 @@ function openReport(type) {
   var channelSection = document.getElementById('rpt_channel_section');
   channelSection.style.display = (type === 'alert') ? 'block' : 'none';
   document.getElementById('rpt_channel').value = '';
+
+  var patrolSection = document.getElementById('rpt_patrol_section');
+  patrolSection.style.display = (type === 'patrol') ? 'block' : 'none';
+  document.getElementById('rpt_patrol_num').value = '';
+  document.getElementById('rpt_patrol_plate').value = '';
 }
 
 function applyPreset() {
@@ -702,6 +723,14 @@ function buildReport() {
   t += '📝 *التفاصيل :*\n' + (g('rpt_detail') || '...') + '\n';
   var channel = g('rpt_channel');
   if (channel) { t += L2 + '\n'; t += '📡 طريقة التلقي :  ' + channel + '\n'; }
+  var patrolNum   = g('rpt_patrol_num');
+  var patrolPlate = g('rpt_patrol_plate');
+  if (patrolNum || patrolPlate) {
+    t += L2 + '\n';
+    t += '🚓 *بيانات الدورية :*\n';
+    if (patrolNum)   t += '▪ رقم الدورية  :  ' + patrolNum + '\n';
+    if (patrolPlate) t += '▪ رقم اللوحة   :  ' + patrolPlate + '\n';
+  }
   var nm = g('rpt_nm'), id = g('rpt_id');
   if (nm || id) {
     t += L2 + '\n';
@@ -721,15 +750,18 @@ function updatePreview() {
 }
 
 function copyReport() {
-  addToArchive(
-    REPORT_TYPES[currentType] ? REPORT_TYPES[currentType].title : 'تقرير',
-    g('rpt_loc'), g('rpt_shift'), g('rpt_period'), g('rpt_detail'), g('rpt_guard')
-  );
+  if (currentType !== 'alert') {
+    addToArchive(
+      REPORT_TYPES[currentType] ? REPORT_TYPES[currentType].title : 'تقرير',
+      g('rpt_loc'), g('rpt_shift'), g('rpt_period'), g('rpt_detail'), g('rpt_guard'),
+      g('rpt_nm'), g('rpt_id')
+    );
+  }
   copyText(buildReport());
 }
 
 function clearReport() {
-  ['rpt_guard','rpt_loc','rpt_detail','rpt_nm','rpt_id'].forEach(function(k){
+  ['rpt_guard','rpt_loc','rpt_detail','rpt_nm','rpt_id','rpt_patrol_num','rpt_patrol_plate'].forEach(function(k){
     document.getElementById(k).value = '';
   });
   document.getElementById('rpt_preset_select').value = '';
@@ -781,7 +813,7 @@ function updateVisitPreview() {
 }
 
 function copyVisit() {
-  addToArchive('✒️ زيارة', g('vt_loc'), g('vt_shift'), g('vt_period'), g('vt_detail'), g('vt_guard'));
+  addToArchive('✒️ زيارة', g('vt_loc'), g('vt_shift'), g('vt_period'), g('vt_detail'), g('vt_guard'), g('vt_nm'), g('vt_id'));
   copyText(buildVisit());
 }
 
@@ -807,7 +839,7 @@ function saveArchive(data) {
   try { localStorage.setItem('portal_archive', JSON.stringify(data)); } catch(e) {}
 }
 
-function addToArchive(type, location, shift, period, detail, guard) {
+function addToArchive(type, location, shift, period, detail, guard, personName, personId) {
   var arc = getArchive();
   var d = new Date();
   arc.unshift({
@@ -818,6 +850,8 @@ function addToArchive(type, location, shift, period, detail, guard) {
     period: period || '—',
     detail: (detail || '').substring(0, 120),
     guard: guard || '—',
+    personName: personName || '—',
+    personId: personId || '—',
     date: d.toLocaleDateString('en-GB'),
     time: String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'),
     day: ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][d.getDay()]
@@ -863,6 +897,8 @@ function renderArchive() {
         '<span class="arc-tag">📍 ' + r.loc + '</span>' +
         '<span class="arc-tag">🔹 ' + r.shift + '</span>' +
         '<span class="arc-tag">👮 ' + r.guard + '</span>' +
+        (r.personName && r.personName !== '—' ? '<span class="arc-tag">👤 ' + r.personName + '</span>' : '') +
+        (r.personId && r.personId !== '—' ? '<span class="arc-tag">🪪 ' + r.personId + '</span>' : '') +
       '</div>' +
       '<div class="arc-actions">' +
         '<button class="arc-btn" style="background:#eff6ff; color:#1e3a8a;" onclick="viewReport(' + r.id + ')">👁️ عرض</button>' +
@@ -876,7 +912,7 @@ function viewReport(id) {
   var arc = getArchive();
   var r = arc.find(function(x){ return x.id === id; });
   if (!r) return;
-  alert(
+  var txt =
     r.type + '\n' +
     '━━━━━━━━━━\n' +
     '📍 ' + r.loc + '\n' +
@@ -884,10 +920,11 @@ function viewReport(id) {
     '⏰ ' + r.time + '\n' +
     '🔹 ' + r.shift + ' — ' + r.period + '\n' +
     '┄┄┄┄┄┄┄┄┄┄\n' +
-    r.detail + '\n' +
-    '━━━━━━━━━━\n' +
-    '👮 ' + r.guard
-  );
+    r.detail + '\n';
+  if (r.personName && r.personName !== '—') txt += '┄┄┄┄┄┄┄┄┄┄\n👤 الاسم : ' + r.personName + '\n';
+  if (r.personId   && r.personId   !== '—') txt += '🪪 الرقم : ' + r.personId + '\n';
+  txt += '━━━━━━━━━━\n👮 ' + r.guard;
+  alert(txt);
 }
 
 function deleteReport(id) {
@@ -915,9 +952,9 @@ function exportExcel() {
   }
   if (arc.length === 0) { toast('⚠️ لا توجد تقارير للتصدير'); return; }
 
-  var rows = [['النوع','التاريخ','اليوم','الوقت','الموقع','الوردية','الفترة','التفاصيل','رجل الأمن']];
+  var rows = [['النوع','التاريخ','اليوم','الوقت','الموقع','الوردية','الفترة','التفاصيل','رجل الأمن','اسم الشخص','رقم الشخص']];
   arc.forEach(function(r){
-    rows.push([r.type, r.date, r.day, r.time, r.loc, r.shift, r.period, r.detail, r.guard]);
+    rows.push([r.type, r.date, r.day, r.time, r.loc, r.shift, r.period, r.detail, r.guard, r.personName || '—', r.personId || '—']);
   });
 
   var tsv = rows.map(function(r){ return r.join('\t'); }).join('\n');
@@ -1047,7 +1084,6 @@ function updateRainPreview() {
 }
 
 function copyRain() {
-  addToArchive('🌧️ مطر', g('rn_loc'), g('rn_shift'), g('rn_period'), g('rn_notes'), g('rn_guard'));
   copyText(buildRain());
 }
 
@@ -1108,7 +1144,7 @@ function buildLighting() {
 
   var t = '';
   t += L + '\n';
-  t += '💡 تقرير الإنارة والسياجات الأمنية\n';
+  t += '💡 تقرير الإنارة والسياح الأمنية\n';
   t += L + '\n';
   t += '📍 الموقع   :  ' + (g('lt_loc') || '—') + '\n';
   t += '📅 التاريخ  :  *' + days[d.getDay()] + '*  ( ' + ds + ' )\n';
@@ -1143,10 +1179,7 @@ function updateLtPreview() {
   if (el) el.innerText = buildLighting();
 }
 
-function copyLighting() {
-  addToArchive('💡 إنارة', g('lt_loc'), g('lt_shift'), g('lt_period'), 'تقرير إنارة وسياجات أمنية', g('lt_guard'));
-  copyText(buildLighting());
-}
+function copyLighting() { copyText(buildLighting()); }
 
 function clearLighting() {
   ['lt_guard','lt_loc'].forEach(function(k){ document.getElementById(k).value = ''; });
